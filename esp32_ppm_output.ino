@@ -2,10 +2,9 @@
 #define PPM_PULSE_LENGTH 300
 #define PPM_CHANNELS 8
 #define DEFAULT_CHANNEL_VALUE 1500
-
 #define OUTPUT_PIN 14
 
-uint16_t channelValue[16] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500};
+uint16_t channelValue[PPM_CHANNELS] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500};
 
 hw_timer_t *timer = NULL;
 portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
@@ -17,18 +16,6 @@ enum ppmState_e
     PPM_STATE_FILL,
     PPM_STATE_SYNC
 };
-
-int getRcChannel_wrapper(uint8_t channel)
-{
-    if (channel >= 0 && channel < 16)
-    {
-        return channelValue[channel];
-    }
-    else
-    {
-        return DEFAULT_CHANNEL_VALUE;
-    }
-}
 
 void IRAM_ATTR onPpmTimer()
 {
@@ -51,7 +38,7 @@ void IRAM_ATTR onPpmTimer()
 
     if (ppmState == PPM_STATE_PULSE)
     {
-        ppmOutput = !ppmOutput;
+        ppmOutput = HIGH;
         usedFrameLength += PPM_PULSE_LENGTH;
         ppmState = PPM_STATE_FILL;
 
@@ -59,8 +46,8 @@ void IRAM_ATTR onPpmTimer()
     }
     else if (ppmState == PPM_STATE_FILL)
     {
-        // ppmOutput = LOW;
-        currentChannelValue = getRcChannel_wrapper(ppmChannel);
+        ppmOutput = LOW;
+        currentChannelValue = channelValue[ppmChannel];
 
         ppmChannel++;
         ppmState = PPM_STATE_PULSE;
